@@ -1,7 +1,95 @@
-<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Polite Scraper</title>
-<style>body{font:16px system-ui;max-width:680px;margin:40px auto;padding:0 16px;background:#0f172a;color:#e2e8f0}h1{color:#f5b301}a{color:#f5b301}code{background:#1e293b;padding:2px 6px;border-radius:4px}</style>
-<h1>Polite Scraper</h1>
-<p>Public data to CSV or Excel. Obeys robots.txt, rate limited, blocks sites that forbid scraping.</p>
-<p>Run locally: <code>pip install -r requirements.txt && python -m scraper.server</code></p>
-<p><a href="https://github.com/mahmoudabdalhamid10-alt/polite-scraper">Source code</a></p>
-<p><small>Built with AI assistance.</small></p>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Polite Scraper — public web data to CSV / Excel</title>
+<meta name="description" content="A free live tool that turns public web pages into CSV or Excel. Obeys robots.txt, rate limited, blocks sites that forbid scraping.">
+<style>
+:root{--bg:#070b16;--card:#0e1526;--line:#1f2a44;--tx:#e8ecf5;--mut:#8a97b5;--a:#ffb800;--a2:#ff6b3d;--ok:#2ee59d}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.55 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--tx);background:radial-gradient(900px 500px at 85% -10%,#ff6b3d33,transparent 60%),radial-gradient(800px 500px at -10% 10%,#ffb80026,transparent 55%),var(--bg);min-height:100vh}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+.logo{font-weight:800;letter-spacing:-.02em;font-size:20px;display:flex;gap:10px;align-items:center}
+.logo i{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--a),var(--a2));display:grid;place-items:center;color:#111;font-style:normal;font-size:17px}
+nav a{color:var(--mut);text-decoration:none;font-size:14px;margin-left:18px}nav a:hover{color:var(--tx)}
+.hero{padding:34px 0 26px;text-align:center}
+.pill{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);background:#0e152699;border-radius:99px;padding:6px 14px;font-size:13px;color:var(--mut)}
+.pill b{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 12px var(--ok)}
+h1{font-size:clamp(34px,6vw,60px);line-height:1.05;letter-spacing:-.035em;margin:18px 0 14px;font-weight:800}
+h1 span{background:linear-gradient(90deg,var(--a),var(--a2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--mut);max-width:620px;margin:0 auto;font-size:18px}
+.app{margin:30px 0;background:linear-gradient(180deg,#121b31,#0c1324);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 30px 80px #0008}
+.row{display:grid;grid-template-columns:1.1fr 1.6fr .6fr .6fr auto;gap:12px;align-items:end}
+@media(max-width:860px){.row{grid-template-columns:1fr 1fr}.row .full{grid-column:1/-1}}
+label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin-bottom:6px}
+input,select{width:100%;font:inherit;color:var(--tx);background:#0a1020;border:1px solid var(--line);border-radius:12px;padding:12px 13px;outline:none}
+input:focus,select:focus{border-color:var(--a);box-shadow:0 0 0 3px #ffb80033}
+input:disabled{opacity:.4}
+.btn{font:inherit;font-weight:700;border:0;border-radius:12px;padding:13px 20px;cursor:pointer;color:#14100a;background:linear-gradient(135deg,var(--a),var(--a2));transition:.15s;white-space:nowrap}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.08)}.btn:disabled{opacity:.6;cursor:wait;transform:none}
+.btn.ghost{background:#0a1020;color:var(--tx);border:1px solid var(--line)}
+.status{margin-top:14px;min-height:22px;font-size:14px;color:var(--mut)}
+.status.err{color:#ff7a7a}.status.ok{color:var(--ok)}
+.res{margin-top:10px;display:none}
+.bar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin:12px 0;flex-wrap:wrap}
+.tbl{overflow:auto;max-height:380px;border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{position:sticky;top:0;background:#141d36;text-align:left;padding:10px 12px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
+td{padding:9px 12px;border-top:1px solid var(--line);max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr:hover td{background:#ffffff08}
+.safe{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:34px 0}
+@media(max-width:860px){.safe{grid-template-columns:1fr 1fr}}
+.c{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+.c .ic{font-size:22px}.c h3{margin:8px 0 4px;font-size:15px}.c p{margin:0;color:var(--mut);font-size:13.5px}
+.blocked{margin:0 0 40px;color:var(--mut);font-size:13.5px;text-align:center}
+footer{border-top:1px solid var(--line);padding:22px 0 40px;color:var(--mut);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+footer a{color:var(--a);text-decoration:none}
+
+.hero{padding:40px 0 10px}
+.cta{display:flex;gap:12px;justify-content:center;margin:26px 0 8px;flex-wrap:wrap}
+.cta a{text-decoration:none;display:inline-block}
+.mock{margin:38px auto 10px;max-width:880px;border:1px solid var(--line);border-radius:18px;background:#0b1222;box-shadow:0 40px 100px #000a,0 0 0 1px #ffffff08;overflow:hidden;transform:perspective(1400px) rotateX(3deg)}
+.mock .top{display:flex;gap:7px;padding:12px 14px;border-bottom:1px solid var(--line);align-items:center}
+.mock .top i{width:11px;height:11px;border-radius:50%;background:#2a3556}
+.mock .url{margin-left:12px;flex:1;background:#0a1020;border:1px solid var(--line);border-radius:8px;padding:4px 12px;font-size:12px;color:var(--mut)}
+.mock .body{padding:18px}
+.mock table{font-size:13px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:40px 0 10px}
+@media(max-width:860px){.steps{grid-template-columns:1fr}}
+.steps .n{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--a),var(--a2));color:#111;font-weight:800;display:grid;place-items:center;margin-bottom:8px}
+h2{text-align:center;font-size:30px;letter-spacing:-.02em;margin:46px 0 6px}
+.lead{text-align:center;color:var(--mut);margin:0 0 20px}
+.note{color:var(--mut);font-size:13px;text-align:center;margin:8px 0 30px}
+</style></head><body><div class="wrap">
+<nav><div class="logo"><i>&#9935;</i>Polite Scraper</div><div><a href="https://polite-scraper.onrender.com/">Live app</a><a href="https://github.com/mahmoudabdalhamid10-alt/polite-scraper">GitHub</a></div></nav>
+<section class="hero" style="text-align:center"><span class="pill"><b></b>Live &middot; free &middot; no sign-up</span>
+<h1>Public web data,<br><span>straight to Excel.</span></h1>
+<p class="sub">Pick a source or paste a public page, and download a clean CSV or XLSX. It obeys robots.txt, waits between requests and refuses sites that forbid scraping.</p>
+<div class="cta"><a class="btn" href="https://polite-scraper.onrender.com/">Open the live app &rarr;</a><a class="btn ghost" href="https://github.com/mahmoudabdalhamid10-alt/polite-scraper">View source</a></div>
+<p class="note">The free server sleeps when idle. The first visit can take up to a minute to wake it.</p></section>
+
+<div class="mock"><div class="top"><i></i><i></i><i></i><div class="url">polite-scraper &middot; Books (practice site) &middot; 40 rows</div></div>
+<div class="body"><div class="tbl" style="max-height:none"><table>
+<thead><tr><th>title</th><th>price_gbp</th><th>rating_1_to_5</th><th>in_stock</th></tr></thead><tbody>
+<tr><td>A Light in the Attic</td><td>51.77</td><td>3</td><td>true</td></tr>
+<tr><td>Tipping the Velvet</td><td>53.74</td><td>1</td><td>true</td></tr>
+<tr><td>Soumission</td><td>50.10</td><td>1</td><td>true</td></tr>
+<tr><td>Sharp Objects</td><td>47.82</td><td>4</td><td>true</td></tr>
+<tr><td>Sapiens: A Brief History of Humankind</td><td>54.23</td><td>5</td><td>true</td></tr>
+</tbody></table></div></div></div>
+
+<h2>How it works</h2><p class="lead">Three steps, about ten seconds.</p>
+<section class="steps">
+<div class="c"><div class="n">1</div><h3>Pick a source</h3><p>Books or Quotes practice sites, or paste a public page with a table.</p></div>
+<div class="c"><div class="n">2</div><h3>Scrape politely</h3><p>One request per second, robots.txt checked first, 20 pages max.</p></div>
+<div class="c"><div class="n">3</div><h3>Download</h3><p>CSV (opens Arabic correctly in Excel) or a real .xlsx file.</p></div>
+</section>
+
+<h2>Built to stay on the right side</h2><p class="lead">Scraping tools get sites banned. This one has guard rails built in.</p>
+<section class="safe">
+<div class="c"><div class="ic">&#129302;</div><h3>Obeys robots.txt</h3><p>If the site says no, it stops.</p></div>
+<div class="c"><div class="ic">&#9201;</div><h3>Rate limited</h3><p>1 request per second per site, plus per-visitor limits.</p></div>
+<div class="c"><div class="ic">&#128737;</div><h3>Blocklist</h3><p>Alibaba, AliExpress, Amazon, social networks and private addresses are refused.</p></div>
+<div class="c"><div class="ic">&#128274;</div><h3>No personal data</h3><p>Built for public data. Nothing is stored on the server.</p></div>
+</section>
+<footer><div>Open source (MIT). Built with AI assistance.</div><div><a href="https://github.com/mahmoudabdalhamid10-alt/polite-scraper">github.com/mahmoudabdalhamid10-alt/polite-scraper</a></div></footer>
+</div></body></html>
