@@ -1,5 +1,7 @@
 # Polite Scraper
 
+**Live app: https://polite-scraper.onrender.com/** (free server, the first visit can take a minute to wake)
+
 A small web app and command-line tool that collects public data and exports it to CSV or Excel, built to be a good citizen on the web.
 
 - Checks `robots.txt` before every fetch
