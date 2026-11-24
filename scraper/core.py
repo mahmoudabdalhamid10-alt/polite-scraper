@@ -1,4 +1,6 @@
 """Polite scraping core: robots.txt check, rate limit, blocklist, parsers."""
+import ipaddress
+import socket
 import time
 import urllib.robotparser
 from urllib.parse import urljoin, urlparse
@@ -12,9 +14,34 @@ MAX_PAGES = 20   # hard cap per run
 
 # Sites whose terms forbid automated collection. Extend as needed.
 BLOCKED_HOSTS = (
-    "alibaba.com", "aliexpress.com", "amazon.", "facebook.com", "instagram.com",
+    "alibaba.com", "aliexpress.com", "amazon", "facebook.com", "instagram.com",
     "linkedin.com", "tiktok.com", "x.com", "twitter.com",
 )
+MAX_BYTES = 2_000_000  # per page download cap
+MAX_REDIRECTS = 3
+
+
+def _blocked_host(host):
+    parts = host.split(".")
+    for b in BLOCKED_HOSTS:
+        if "." in b:
+            if host == b or host.endswith("." + b):
+                return True
+        elif b in parts or any(x.startswith(b) for x in parts):
+            return True
+    return False
+
+
+def _public_ip_only(host):
+    """Reject hosts that resolve to private, loopback, link-local or reserved addresses (SSRF guard)."""
+    try:
+        infos = socket.getaddrinfo(host, None)
+    except socket.gaierror:
+        raise ScrapeError(f"Cannot resolve {host}.")
+    for info in infos:
+        ip = ipaddress.ip_address(info[4][0])
+        if not ip.is_global:
+            raise ScrapeError("Local or private addresses are not allowed.")
 
 
 class ScrapeError(Exception):
@@ -34,10 +61,9 @@ class PoliteFetcher:
         if p.scheme not in ("http", "https") or not p.hostname:
             raise ScrapeError("Only http/https URLs are supported.")
         host = p.hostname.lower()
-        if any(b in host for b in BLOCKED_HOSTS):
+        if _blocked_host(host):
             raise ScrapeError(f"{host} forbids automated collection. Blocked.")
-        if host == "localhost" or host.startswith(("127.", "10.", "192.168.")):
-            raise ScrapeError("Local addresses are not allowed.")
+        _public_ip_only(host)
         base = f"{p.scheme}://{p.netloc}"
         if base not in self._robots:
             rp = urllib.robotparser.RobotFileParser()
@@ -56,13 +82,25 @@ class PoliteFetcher:
         wait = self.delay - (time.time() - self._last.get(host, 0))
         if wait > 0:
             time.sleep(wait)
+        cur = url
         try:
-            r = self.session.get(url, timeout=15)
+            for _ in range(MAX_REDIRECTS + 1):
+                r = self.session.get(cur, timeout=15, stream=True, allow_redirects=False)
+                if r.status_code in (301, 302, 303, 307, 308) and r.headers.get("Location"):
+                    cur = urljoin(cur, r.headers["Location"])
+                    self.check_allowed(cur)  # every hop is re-checked
+                    continue
+                break
+            else:
+                raise ScrapeError("Too many redirects.")
+            if r.status_code != 200:
+                raise ScrapeError(f"HTTP {r.status_code} for {cur}")
+            body = r.raw.read(MAX_BYTES + 1, decode_content=True)
+            if len(body) > MAX_BYTES:
+                raise ScrapeError("Page is too large (limit 2 MB).")
         finally:
             self._last[host] = time.time()
-        if r.status_code != 200:
-            raise ScrapeError(f"HTTP {r.status_code} for {url}")
-        return BeautifulSoup(r.content, "html.parser")
+        return BeautifulSoup(body, "html.parser")
 
 
 RATINGS = {"One": 1, "Two": 2, "Three": 3, "Four": 4, "Five": 5}
